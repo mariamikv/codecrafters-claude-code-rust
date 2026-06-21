@@ -47,9 +47,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     eprintln!("Logs from your program will appear here!");
-    
-    if let Some(content) = response["choices"][0]["message"]["content"].as_str() {
-        println!("{}", content);
+
+    let message = &response["choices"][0]["message"];
+
+    if let Some(tool_calls) = message["tool_calls"].as_array() {
+        if let Some(call) = tool_calls.first() {
+            let function = &call["function"];
+            let name = function["name"].as_str().unwrap_or_default();
+            let raw_args = function["arguments"].as_str().unwrap_or("{}");
+            let arguments: Value = serde_json::from_str(raw_args)?;
+
+            match name {
+                "read" | "Read" => {
+                    let file_path = arguments["file_path"]
+                        .as_str()
+                        .ok_or("missing file_path argument")?;
+                    let contents = std::fs::read_to_string(file_path)?;
+                    print!("{contents}");
+                }
+                other => eprintln!("Unknown tool: {other}"),
+            }
+        }
+    } else if let Some(content) = message["content"].as_str() {
+        println!("{content}");
     }
 
     Ok(())
