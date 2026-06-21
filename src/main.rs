@@ -28,6 +28,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = Client::with_config(config);
 
+    let model = env::var("LOCAL_MODEL").unwrap_or("anthropic/claude-Opus-4.8".to_string());
+    let tools = tools();
+
     #[allow(unused_variables)]
     let response: Value = client
         .chat()
@@ -38,11 +41,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "content": args.prompt
                 }
             ],
-            "model": "anthropic/claude-haiku-4.5",
+            "model": model,
+            "tools": tools,
         }))
         .await?;
-
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
+    
     eprintln!("Logs from your program will appear here!");
     
     if let Some(content) = response["choices"][0]["message"]["content"].as_str() {
@@ -50,4 +53,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+pub fn tools() -> Vec<Value> {
+    let tools = vec![serde_json::from_str(include_str!("tools/read.json")).unwrap()];
+    tools
 }
