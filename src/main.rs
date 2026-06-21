@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = Client::with_config(config);
 
-    let model = env::var("LOCAL_MODEL").unwrap_or("anthropic/claude-Opus-4.8".to_string());
+    let model = env::var("LOCAL_MODEL").unwrap_or("anthropic/claude-haiku-4.5".to_string());
     let tools = tools();
 
     #[allow(unused_variables)]
@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "tools": tools,
         }))
         .await?;
-    
+
     eprintln!("Logs from your program will appear here!");
     
     if let Some(content) = response["choices"][0]["message"]["content"].as_str() {
